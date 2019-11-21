@@ -18,7 +18,7 @@ export class Profile extends Component {
     }
 
     componentDidMount = () => {
-        this.fetchUsers()
+        this.fetchProfile()
     }
 
     change = e => {
@@ -27,21 +27,27 @@ export class Profile extends Component {
         })
     }
 
-    fetchUsers = async () => {
-        const returned = await fetch(
-            'https://jsonplaceholder.typicode.com/users'
-        );
-        const items = await returned.json()
-        this.setState({validUserName: items[this.state.userId-1].username})
+    fetchProfile = async () => {
+        await this.getUserName()
+        await this.getEmail()
+        await this.getZipcode();
+
+
+
+        // const returned = await fetch(
+        //     'https://jsonplaceholder.typicode.com/users'
+        // );
+        // const items = await returned.json()
+        // this.setState({validUserName: items[this.state.userId-1].username})
 
         // console.log(items)
 
         
-        document.getElementById("userName").placeholder = items[this.state.userId-1].username
-        document.getElementById("email").placeholder = items[this.state.userId-1].email
-        document.getElementById("phone").placeholder = items[this.state.userId-1].phone
-        document.getElementById("zipcode").placeholder = items[this.state.userId-1].address.zipcode
-        document.getElementById("password").placeholder = items[this.state.userId-1].address.street
+        document.getElementById("userName").placeholder = this.state.userName
+        document.getElementById("email").placeholder = this.state.email
+        document.getElementById("phone").placeholder = "8582608580"
+        document.getElementById("zipcode").placeholder = this.state.zipcode
+        document.getElementById("password").placeholder = "**********"              //hardcoded initial password 
     }
 
 
@@ -49,12 +55,66 @@ export class Profile extends Component {
         event.preventDefault();
         event.target.className += " was-validated";
 
+        this.updatePassword()
+
         document.getElementById("userName").placeholder = this.state.userName
         document.getElementById("email").placeholder = this.state.email
         document.getElementById("phone").placeholder = this.state.phone
         document.getElementById("zipcode").placeholder = this.state.zipcode
-        document.getElementById("password").placeholder = this.state.password
 
+        //process the password into *
+        let hiddenPassword =  "*".repeat(this.state.password.length)
+        document.getElementById("password").placeholder = hiddenPassword
+    }
+
+
+    getUserName = async () => {
+        let baseUrl = 'http://andybookserver.herokuapp.com/'
+        const response = await fetch(baseUrl + 'username',  {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        const json = await response.json()
+        // console.log(json.username)
+        await this.setState({userName: json.username})
+    }
+
+    getEmail = async () => {
+        let baseUrl = 'http://andybookserver.herokuapp.com/'
+        const response = await fetch(baseUrl + 'email',  {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        const json = await response.json()
+        // console.log(json.username)
+        await this.setState({email: json.email})
+    }
+
+    getZipcode = async () => {
+        let baseUrl = 'http://andybookserver.herokuapp.com/'
+        const response = await fetch(baseUrl + 'zipcode',  {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        const json = await response.json()
+        // console.log(json.username)
+        await this.setState({zipcode: json.zipcode})
+    }
+
+    updatePassword = async () => {
+        let baseUrl = 'http://andybookserver.herokuapp.com/'
+        const response = await fetch(baseUrl + 'password',  {
+            method: 'PUT',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({password: this.state.password})
+        })
+        const json = await response.json()
+        console.log(json)
+        // await this.setState({status: json.headline})
     }
 
     render() {

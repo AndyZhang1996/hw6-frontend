@@ -27,10 +27,10 @@ export class Registration extends Component {
     this.passwordValidation = this.passwordValidation.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
     this.cancelForm = this.cancelForm.bind(this)
-    this.fetchUsers = this.fetchUsers.bind(this)
-    this.checkUniqueUserName = this.checkUniqueUserName.bind(this)
+    // this.fetchUsers = this.fetchUsers.bind(this)
+    // this.checkUniqueUserName = this.checkUniqueUserName.bind(this)
 
-    this.fetchUsers()
+    // this.fetchUsers()
   }
 
   change = e => {
@@ -43,6 +43,8 @@ export class Registration extends Component {
     let dob = this.state.dob
     dob = dob.replace(/\D/g, '');              //convert to string and strip of the '-'
     var birthYear = Number(dob.substring(0, 4));
+    console.log(birthYear)
+    console.log(typeof birthYear)
     var birthMonth = Number(dob.substring(4, 6)) - 1;
     var birthDay = Number(dob.substring(6));
     var current = new Date();
@@ -93,38 +95,38 @@ export class Registration extends Component {
     })
   }
 
-  fetchUsers = async () => {
-    const returned = await fetch(
-        'https://jsonplaceholder.typicode.com/users'
-    );
-    const items = await returned.json()
-    let userNamesArray = []
-    items.map(user => {
-      userNamesArray.push(user.username)
-    })
-    console.log(userNamesArray)
-    if (localStorage.getItem("userNames") === null) {
-      localStorage.setItem("userNames", userNamesArray)
-    }
-}
+//   fetchUsers = async () => {
+//     const returned = await fetch(
+//         'https://jsonplaceholder.typicode.com/users'
+//     );
+//     const items = await returned.json()
+//     let userNamesArray = []
+//     items.map(user => {
+//       userNamesArray.push(user.username)
+//     })
+//     console.log(userNamesArray)
+//     if (localStorage.getItem("userNames") === null) {
+//       localStorage.setItem("userNames", userNamesArray)
+//     }
+// }
 
-checkUniqueUserName = () => {
-  let userNames = localStorage.getItem("userNames").split(",")
-  let unique = true
-  userNames.map(userName => {
-    if(this.state.accountName === userName) {
-      unique = false
-    }
-  })
+// checkUniqueUserName = () => {
+//   let userNames = localStorage.getItem("userNames").split(",")
+//   let unique = true
+//   userNames.map(userName => {
+//     if(this.state.accountName === userName) {
+//       unique = false
+//     }
+//   })
 
-  if (unique == true){
-    userNames.push(this.state.accountName)
-    localStorage.setItem("userNames", userNames)
-  } else{
-    alert("Account name already exists")
-  }
-  return unique
-}
+//   if (unique == true){
+//     userNames.push(this.state.accountName)
+//     localStorage.setItem("userNames", userNames)
+//   } else{
+//     alert("Account name already exists")
+//   }
+//   return unique
+// }
 
 getUserName = () => {
     this.setState({ userName: this.state.users[this.state.userId - 1].username })
@@ -142,9 +144,10 @@ getUserName = () => {
 
   // handleSubmit = (e) => {
   handleSubmit = (e) => {
-    // e.preventDefault();
+    // e.preventDefault()
     //this.setState({ ageValid: true })
     //return;
+    e.preventDefault()
     let ageValid = this.ageValidation()
     let passwordValid = this.passwordValidation()
     console.log(ageValid + ' ' + passwordValid)
@@ -173,42 +176,93 @@ getUserName = () => {
 
 
     //check if is a unique userName
-    const unique = this.checkUniqueUserName()
+    // const unique = this.checkUniqueUserName()
 
 
 
 
-    if (ageValid === true && passwordValid === true && unique === true) {
-      localStorage.setItem("userId", this.state.userId)
-      localStorage.setItem('userValid', true);
+    if (ageValid === true && passwordValid === true) {
+      this.addNewUser()
+      
+
+
+      // localStorage.setItem("userId", this.state.userId)
+      // localStorage.setItem('userValid', true);
       // this.setState({ : true })                //comment out then no redirect 
-      console.log("in inner!!!!!!!!!!")
+      // console.log("in inner!!!!!!!!!!")
  
       // this.logined = true;
 
     // localStorage.setItem('logined', 't');
-      e.preventDefault();
+      
+      // e.preventDefault()
     }
+  }
 
+  addNewUser = async () => {
+    let baseUrl = 'http://andybookserver.herokuapp.com/'
+    console.log("in add new user!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    console.log(this.state.accountName)
+    console.log("dob", typeof this.state.dob)
+    console.log("dob", this.state.dob)
+    console.log(typeof this.state.password)
+
+    let dob = this.state.dob
+    dob = dob.replace(/\D/g, '')               //convert to string and strip of the '-'
+    let birthYear = Number(dob.substring(0, 4))
+    console.log(birthYear)
+    console.log(typeof birthYear)
+    let birthMonth = Number(dob.substring(4, 6)) - 1
+    let birthDay = Number(dob.substring(6))
+
+    const response = await fetch(baseUrl + 'register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: this.state.accountName,
+                                   email: this.state.emailAddress,
+                                   dob: new Date(birthYear, birthMonth, birthDay).getTime().toString(),
+                                   zipcode: this.state.zipCode,
+                                   password: this.state.password}),
+        })
+    let responseMsg = document.getElementById("responseMsg")
+    
+
+    if(response.status == 400){
+      const json = await response.json()
+      responseMsg.style = "display: inline; color: red; font-size: 25px"
+      responseMsg.innerHTML = json.Msg
+
+      
+      
+      console.log(json.Msg)
+    }else{
+      const json = await response.json()
+      responseMsg.style = "display: inline; color: green; font-size: 25px"
+      responseMsg.innerHTML = json.result
+      this.setState({redirectMain: true})
+
+
+      // alert(json.result)
+      console.log(json.result)
+      console.log(this.state.redirectMain)
+    }
   }
 
 
   render() {
-    // {if (localStorage.getItem("userNames") === null) {
-    //   return <div>loading</div>
-    // }}
     return (
       <div className="registration">
         <h1>Register</h1>
+        <div className="ml-5 mb-2"><span id="responseMsg"></span></div>
         {/* {this.state.redirectMain */}
         {/* {localStorage.setItem('userId', 1)} */}
         {/* {localStorage.setItem('userValid', true)} */}
-        {/* {<Redirect to='/Main' push />} */}
-          { this.state.redirectMain && <Redirect to='/Main' push />}
+        {/* {this.state.redirectMain && <Redirect to='/Main' push />} */}
+          {/* { this.state.redirectMain && <Redirect to='/Main' push />} */}
         <form className="registrationForm" onSubmit={this.handleSubmit}>
         {/* <form className="registrationForm" onSubmit={e => e.preventDefault()}> */}
-
-          <div className="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+          <div className="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+      
             <div className="row ml-5">
               <label>Account Name:</label>
               <input
@@ -220,6 +274,7 @@ getUserName = () => {
                 title="upper or lower case letters and numbers, may not start with a number"
                 required
               />
+              
             </div>
             <div className="row ml-5 mt-2">
               <label>Email Address:</label>
@@ -301,6 +356,8 @@ getUserName = () => {
               />
               <span id="passwordMsg"></span>
             </div>
+          
+            
 
 
             <div className="button">
@@ -312,6 +369,10 @@ getUserName = () => {
         </form>
       </div>
     )
+
+
+
+
   }
 }
 

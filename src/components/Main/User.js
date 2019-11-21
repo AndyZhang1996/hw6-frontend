@@ -26,11 +26,24 @@ export class User extends Component {
         this.setState({newStatus: ""})
     }
 
-    handleLogout = () => {
-        localStorage.setItem("userId", "")
-        localStorage.setItem("userValid", "")
-        this.setState({redirectLogin: true})
-        localStorage.setItem("redirectMainRegist", false)
+    handleLogout = async () => {
+        let baseUrl = 'http://andybookserver.herokuapp.com/'
+        const response = await fetch(baseUrl + 'logout',  {
+            method: 'PUT',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        const json = await response.json()
+        console.log(json.result)
+        // // console.log(json.username)
+        // await this.setState({status: json.headline})
+
+
+
+        // localStorage.setItem("userId", "")
+        // localStorage.setItem("userValid", "")
+        await this.setState({redirectLogin: true})
+        // localStorage.setItem("redirectMainRegist", false)
     }
 
     handleProfile = () => {

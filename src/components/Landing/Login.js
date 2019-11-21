@@ -6,7 +6,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 export class Login extends Component {
     constructor(props) {
         super(props)
-
         this.state = {
             data: "",
             userId: "",
@@ -16,11 +15,11 @@ export class Login extends Component {
             redirectMain: false
         }
         //bind the functions
-        this.change = this.change.bind(this)
-        this.userValidation = this.userValidation.bind(this)
+        // this.change = this.change.bind(this)
+        // this.userValidation = this.userValidation.bind(this)
 
         //fetch the data once
-        this.fetchItems()
+        // this.fetchItems()
 
         //login experiment
         // this.login()
@@ -31,10 +30,11 @@ export class Login extends Component {
 
     change = e => {
         this.setState({
-          [e.target.name]: e.target.value
+          [e.target.name]: e.target.value,
+          userValid: false
         })
-        this.setState({userValid: false})
       }
+
 
     userValidation = () => {
         let userValid = false
@@ -68,6 +68,7 @@ export class Login extends Component {
         }
     }
 
+
     fetchItems = async () => {
         // console.log("in fetch items!!!!!!!!!!!!")
         const returned = await fetch(
@@ -98,12 +99,47 @@ export class Login extends Component {
     //     console.log(typeof response.status)
     // }
 
+    login = async () => {
+        // console.log("in here!!!!!!!!!!!!!!!!!!!!")
+        let responseMsg = document.getElementById("responseMsg1")
+        if(this.state.userName == ""){
+            responseMsg.style = "display: inline; color: red; font-size: 25px"
+            responseMsg.innerHTML = "Please provide the user name!"
+        }else if(this.state.password == ""){
+            responseMsg.style = "display: inline; color: red; font-size: 25px"
+            responseMsg.innerHTML = "Please provide the password!"
+        }
+        let baseUrl = 'http://andybookserver.herokuapp.com/'
+
+        const response = await fetch(baseUrl + 'login', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: this.state.userName,
+                                   password: this.state.password}),
+        })
+        // console.log("in here!!!!!!!!!!!!!!!!!!!!")
+        if(response.status == 400){
+            const json = await response.json()
+            responseMsg.style = "display: inline; color: red; font-size: 25px"
+            responseMsg.innerHTML = json.Msg
+        }else{
+            const json = await response.json()
+            responseMsg.style = "display: inline; color: green; font-size: 25px"
+            responseMsg.innerHTML = json.result
+            this.setState({redirectMain: true})
+        }
+    }
+
+
+
     render() {
         //eturn <Redirect to='/Main' push />
         return (
             <div className="login">
-                {this.state.redirectMain && <Redirect to='/Main' push/>}
+                {this.state.redirectMain && <Redirect to='/Main' push/>}       
                 <h1>Log in</h1>
+                <div className="mb-2"><span id="responseMsg1"></span></div>
                 <div>
                 <input
                     name="userName"
@@ -125,7 +161,7 @@ export class Login extends Component {
                 />
                 </div>
                 <div>
-                    <button className="btn btn-primary btn-sm mt-2 ml-5" onClick={this.userValidation}>Login</button>
+                    <button className="btn btn-primary btn-sm mt-2 ml-5" onClick={this.login}>Login</button>
                     {/* <button onClick={this.userValidation}>Login</button> */}
                 </div>
             </div>

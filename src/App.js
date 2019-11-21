@@ -21,11 +21,12 @@ function App() {
           <Route
             path="/"
             exact
-            render={props => <Landing {...props} />}
+            component={Landing}
+            // render={props => <Landing {...props} />}
             // component={() => <Landing />}
           />
-          <PrivateRoute path="/Main" exact component={Main} />
-          <PrivateRoute path="/Profile" exact component={Profile} />
+          <Route path="/Main" exact component={Main} />
+          <Route path="/Profile" exact component={Profile} />
         </Switch>
       </div>
     </Router>
@@ -42,24 +43,24 @@ function App() {
   );
 }
 
-const PrivateRoute = ({ component: Component, ...rest }) => (
-  <Route
-    {...rest}
-    render={props => {
-      if ((localStorage.getItem("userValid") || "false") === "true") {
-        return <Component {...props} />;
-      } else {
-        return (
-          <Redirect
-            to={{
-              pathname: "/"
-            }}
-          />
-        );
-      }
-    }}
-  />
-);
+// const PrivateRoute = ({ component: Component, ...rest }) => (
+//   <Route
+//     {...rest}
+//     render={props => {
+//       if ((localStorage.getItem("userValid") || "false") === "true") {
+//         return <Component {...props} />;
+//       } else {
+//         return (
+//           <Redirect
+//             to={{
+//               pathname: "/"
+//             }}
+//           />
+//         );
+//       }
+//     }}
+//   />
+// );
 
 // const PrivateRoute = ({ component: Component, ...rest }) => (
 //   <Route

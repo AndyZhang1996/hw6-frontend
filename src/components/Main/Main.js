@@ -18,7 +18,7 @@ export class Main extends Component {
         super(props)
 
         this.state = {
-            userId: localStorage.getItem("userId"),             //id of the user who logged in
+            userId: "",             //id of the user who logged in
             userName: "",          //name of the currently logged-in user 
             users: "",             //information of all users 
             posts: "",             //information of all posts
@@ -40,20 +40,76 @@ export class Main extends Component {
 
         this.change = this.change.bind(this)
         this.addFriend = this.addFriend.bind(this)
-        this.getUserName = this.getUserName.bind(this)
+        // this.getUserName = this.getUserName.bind(this)
         this.removeFriend = this.removeFriend.bind(this)
     }
 
     componentDidMount = () => {
         // console.log('ok')
         //if(!localStorage.getItem('userId')) return
-        this.fetchPosts()
-        this.fetchUsers()
+        this.getUsername()
+        this.getHeadline()
+        this.getAllArticles()
+        // this.fetchPosts()
+        // this.fetchUsers()
         // this.fetchStatus()
     }
 
+    getUsername = async () => {
+        let baseUrl = 'http://andybookserver.herokuapp.com/'
+        const response = await fetch(baseUrl + 'username',  {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        const json = await response.json()
+        // console.log(json.username)
+        this.setState({userName: json.username})
+    }
+
+    getHeadline = async () => {
+        let baseUrl = 'http://andybookserver.herokuapp.com/'
+        const response = await fetch(baseUrl + 'headline',  {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        const json = await response.json()
+        console.log(json.headline)
+        // console.log(json.username)
+        this.setState({status: json.headline})
+    }
+
+    //get the feed of the logged-in user, including the user's articles and his friends' articles 
+    getAllArticles = async () => {
+        let baseUrl = 'http://andybookserver.herokuapp.com/'
+        const response = await fetch(baseUrl + 'articles',  {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },    
+        })
+        const json = await response.json()
+        // let myJson = JSON.stringify(json)
+        this.setState({userPosts: json.articles}, () => this.setState({ filteredPosts: this.state.userPosts }))
+        // console.log(typeof json.articles[0].date)
+    }
 
 
+    //post an article an logged-in user
+    addPost = async () => {
+        let baseUrl = 'http://andybookserver.herokuapp.com/'
+        const response = await fetch(baseUrl + 'article',  {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({text: this.state.newPost})
+        })
+        const json = await response.json()
+        await this.getAllArticles()
+        this.clearPost()
+    }
+
+    
 
     getUserFriendIds = () => {
         let tempArray = []
@@ -121,16 +177,16 @@ export class Main extends Component {
         // console.log(this.state.data[0].address.street)
         // console.log(this.state.users[0].username)
 
-        this.getUserName()
+        // this.getUserName()
         // this.fetchFriends()
         // this.fetchStatus()
         // let statusArray = localStorage.getItem("allStatus").split(",")
         // this.setState({allStatus: statusArray})
     }
 
-    getUserName = () => {
-        this.setState({ userName: this.state.users[this.state.userId - 1].username })
-    }
+    // getUserName = () => {
+    //     this.setState({ userName: this.state.users[this.state.userId - 1].username })
+    // }
 
 
 
@@ -321,40 +377,51 @@ export class Main extends Component {
     }
 
 
-    addPost = () => {
-        let increasedStamp = this.state.timeStamp + 1
-        let newPostId = this.state.extraPostId + 1
-        this.setState({extraPostId: newPostId})
-        this.setState({ timeStamp: increasedStamp }, () => {
-            console.log("in updateUserPosts")
-            let tempArray = this.state.userPosts
-            let newPost = {
-                body: this.state.newPost,
-                timeStamp: this.state.timeStamp,
-                userId: this.state.userId,
-                userName: this.state.userName,
-                postId: newPostId
-            }
-            tempArray.push(newPost)
-            this.setState({ userPosts: tempArray })
-            this.state.userPosts.sort((a, b) => parseInt(b.timeStamp) - parseInt(a.timeStamp))
-            this.setState({ filteredPosts: this.state.userPosts })
-            this.clearPost()
-        })
-        // tempArray.sort((a, b) => parseInt(b.timeStamp) - parseInt(a.timeStamp))
-        // this.setState({userPosts: tempArray})
-    }
+    // addPost = () => {
+    //     let increasedStamp = this.state.timeStamp + 1
+    //     let newPostId = this.state.extraPostId + 1
+    //     this.setState({extraPostId: newPostId})
+    //     this.setState({ timeStamp: increasedStamp }, () => {
+    //         console.log("in updateUserPosts")
+    //         let tempArray = this.state.userPosts
+    //         let newPost = {
+    //             body: this.state.newPost,
+    //             timeStamp: this.state.timeStamp,
+    //             userId: this.state.userId,
+    //             userName: this.state.userName,
+    //             postId: newPostId
+    //         }
+    //         tempArray.push(newPost)
+    //         this.setState({ userPosts: tempArray })
+    //         this.state.userPosts.sort((a, b) => parseInt(b.timeStamp) - parseInt(a.timeStamp))
+    //         this.setState({ filteredPosts: this.state.userPosts })
+    //         this.clearPost()
+    //     })
+    //     // tempArray.sort((a, b) => parseInt(b.timeStamp) - parseInt(a.timeStamp))
+    //     // this.setState({userPosts: tempArray})
+    // }
 
     clearPost = () => {
         this.setState({ newPost: "" })
     }
 
-    handleStatusChange = newStatus => {
-        let tempArray = this.state.allStatus
-        let idx = this.state.userId - 1
-        tempArray[idx] = newStatus
-        localStorage.setItem("allStatus", tempArray)
-        this.setState({ status: newStatus })
+    handleStatusChange = async newStatus => {
+        let baseUrl = 'http://andybookserver.herokuapp.com/'
+        const response = await fetch(baseUrl + 'headline',  {
+            method: 'PUT',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({headline: newStatus})
+        })
+        const json = await response.json()
+        // console.log(json.username)
+        await this.setState({status: json.headline})
+
+        // let tempArray = this.state.allStatus
+        // let idx = this.state.userId - 1
+        // tempArray[idx] = newStatus
+        // localStorage.setItem("allStatus", tempArray)
+        // this.setState({ status: newStatus })
     }
 
     handleSearch = e => {
@@ -416,7 +483,7 @@ export class Main extends Component {
                 <Row>
                     <div className="" col-lg-6>
                         <div>
-                            <User username={this.state.users ? this.state.users[this.state.userId - 1].username : ''}
+                            <User username={this.state.userName}
                                 status={this.state.status ? this.state.status : ''}
                                 updateStatus={this.handleStatusChange} />
 
@@ -483,7 +550,7 @@ export class Main extends Component {
 
                                     <div className="Row">
                                         <Button variant="primary" onClick={this.clearPost}>Cancel</Button>
-                                        <Button className="ml-2" variant="primary" onClick={this.addPost}>Post</Button>
+                                        <Button id="btn" className="ml-2" variant="primary" onClick={this.addPost}>Post</Button>
                                     </div>
                                 </div>
 
@@ -494,10 +561,10 @@ export class Main extends Component {
 
                         <Card style={{ width: '70rem' }}>
                             <div className="text-center">
-                                <input size="40" type="text" onChange={this.handleSearch} placeholder="search here" />
+                                <input size="40" name="search" type="text" onChange={this.handleSearch} placeholder="search here" />
                             </div>
 
-                        </Card>
+                        </Card> 
 
 
 
@@ -515,7 +582,7 @@ export class Main extends Component {
                                           postId={post.postId}/>
                                 ))
                                     :
-                                    ''
+                                    ""
                             }
                         </div>
 
